@@ -1,0 +1,187 @@
+#include <gtk/gtk.h>
+
+/* Login prompt text */
+static const char *user_text = "Username";
+/* Password prompt text */
+static const char *pass_text = "Password";
+/* Session name */
+static const char *session = "default";
+/* GTK UI CSS */
+static const gchar *style =
+"window {"
+    "background-color: #262626;"
+"}"
+"window * {"
+    "font: 16px \"DejaVu Sans Mono\";"
+"}"
+"label {"
+    "color: white;"
+    "margin-right: 15px;"
+"}"
+"entry {"
+    "background-color: white;"
+    "border-radius: 10px;"
+    "box-shadow: 1px 1px white inset;"
+"}"
+"#message_label {"
+    "color: red;"
+    "margin-top: 25px;"
+    "font-size: 14px;"
+"}";
+/* GTK UI XML*/
+static const gchar *ui =
+"<?xml version='1.0' encoding='UTF-8'?>"
+"<interface>"
+  "<requires lib='gtk+' version='3.20'/>"
+  "<object class='GtkWindow' id='login_window'>"
+    "<property name='name'>login_window</property>"
+    "<property name='can_focus'>False</property>"
+    "<property name='resizable'>False</property>"
+    "<property name='accept_focus'>False</property>"
+    "<property name='decorated'>False</property>"
+    "<child>"
+      "<placeholder/>"
+    "</child>"
+    "<child>"
+      "<object class='GtkBox' id='login_box'>"
+        "<property name='name'>login_box</property>"
+        "<property name='visible'>True</property>"
+        "<property name='can_focus'>False</property>"
+        "<property name='valign'>center</property>"
+        "<property name='vexpand'>True</property>"
+        "<property name='orientation'>vertical</property>"
+        "<child>"
+          "<object class='GtkBox' id='prompt_box'>"
+            "<property name='name'>prompt_box</property>"
+            "<property name='visible'>True</property>"
+            "<property name='can_focus'>False</property>"
+            "<property name='spacing'>15</property>"
+            "<property name='homogeneous'>True</property>"
+            "<child>"
+              "<object class='GtkLabel' id='prompt_label'>"
+                "<property name='name'>prompt_label</property>"
+                "<property name='visible'>True</property>"
+                "<property name='can_focus'>False</property>"
+                "<property name='halign'>end</property>"
+              "</object>"
+              "<packing>"
+                "<property name='expand'>False</property>"
+                "<property name='fill'>True</property>"
+                "<property name='position'>0</property>"
+              "</packing>"
+            "</child>"
+            "<child>"
+              "<object class='GtkEntry' id='prompt_entry'>"
+                "<property name='name'>prompt_entry</property>"
+                "<property name='visible'>True</property>"
+                "<property name='can_focus'>True</property>"
+                "<property name='halign'>start</property>"
+                "<property name='has_frame'>False</property>"
+                "<property name='max_width_chars'>15</property>"
+                "<property name='primary_icon_activatable'>False</property>"
+                "<property name='secondary_icon_activatable'>False</property>"
+                "<signal name='activate' handler='login_cb' swapped='no'/>"
+              "</object>"
+              "<packing>"
+                "<property name='expand'>False</property>"
+                "<property name='fill'>True</property>"
+                "<property name='position'>1</property>"
+              "</packing>"
+            "</child>"
+          "</object>"
+          "<packing>"
+            "<property name='expand'>False</property>"
+            "<property name='fill'>True</property>"
+            "<property name='position'>0</property>"
+          "</packing>"
+        "</child>"
+        "<child>"
+          "<object class='GtkLabel' id='message_label'>"
+            "<property name='name'>message_label</property>"
+            "<property name='visible'>True</property>"
+            "<property name='can_focus'>False</property>"
+            "<property name='halign'>center</property>"
+            "<property name='width_chars'>25</property>"
+            "<property name='max_width_chars'>50</property>"
+          "</object>"
+          "<packing>"
+            "<property name='expand'>False</property>"
+            "<property name='fill'>True</property>"
+            "<property name='position'>1</property>"
+          "</packing>"
+        "</child>"
+      "</object>"
+    "</child>"
+  "</object>"
+"</interface>";
+
+/* Callback function for login button */
+static void login_cb(GtkWidget *widget, gpointer data){
+    /* Get the username and password */
+    GtkWindow *window = gtk_widget_get_toplevel(widget);
+    GtkEntry *user_entry = GTK_ENTRY(gtk_builder_get_object(data, "prompt_entry"));
+    GtkEntry *pass_entry = GTK_ENTRY(gtk_builder_get_object(data, "pass_entry"));
+    const gchar *username = gtk_entry_get_text(user_entry);
+    const gchar *password = gtk_entry_get_text(pass_entry);
+
+    /* Check if the username and password are correct */
+    if (g_strcmp0(username, "admin") == 0 && g_strcmp0(password, "password") == 0) {
+        /* Login successful */
+        GtkLabel *message_label = GTK_LABEL(gtk_builder_get_object(data, "message_label"));
+        gtk_label_set_text(message_label, "Login successful");
+    } else {
+        /* Login failed */
+        GtkLabel *message_label = GTK_LABEL(gtk_builder_get_object(data, "message_label"));
+        gtk_label_set_text(message_label, "Incorrect username or password");
+    }
+}
+
+int main(int argc, char *argv[])
+{
+    GtkBuilder *builder;
+    GtkWidget *window;
+
+    /* Initialize GTK */
+    gtk_init(&argc, &argv);
+
+    /* Create a builder object and load the UI from the XML */
+    builder = gtk_builder_new_from_string(ui, -1);
+
+    /* Create the login window */
+    window = GTK_WIDGET(gtk_builder_get_object(builder, "login_window"));
+    gtk_window_set_title(GTK_WINDOW(window), "Login");
+    gtk_window_set_position(GTK_WINDOW(window), GTK_WIN_POS_CENTER_ALWAYS);
+    gtk_window_set_default_size(GTK_WINDOW(window), 400, 200);
+    gtk_container_set_border_width(GTK_CONTAINER(window), 10);
+
+    /* Set the window style */
+    GtkCssProvider *provider = gtk_css_provider_new();
+    gtk_css_provider_load_from_data(provider, style, -1, NULL);
+    gtk_style_context_add_provider_for_screen(gdk_screen_get_default(),
+                            GTK_STYLE_PROVIDER(provider),
+                            GTK_STYLE_PROVIDER_PRIORITY_USER);
+
+    /* Connect the login callback function */
+    gtk_builder_connect_signals(builder, builder);
+    g_object_unref(builder);
+
+    /* Show the window and start the main loop */
+    gtk_widget_show_all(window);
+
+    // Get the default screen and its dimensions
+    GdkScreen *screen = gdk_screen_get_default();
+    gint screen_width = gdk_screen_get_width(screen);
+    gint screen_height = gdk_screen_get_height(screen);
+
+    // Get the height of the window
+    gint width, height;
+    gtk_window_get_size(GTK_WINDOW(window), &width, &height);
+
+    // Set the position of the window to the bottom-left corner
+    gtk_window_set_position(GTK_WINDOW(window), GTK_WIN_POS_NONE);
+    gtk_window_move(GTK_WINDOW(window), 0, screen_height - height);
+
+    gtk_main();
+
+    return 0;
+}
