@@ -1,6 +1,6 @@
 # My minimal Qtile config
 
-This is a very very minimal Qtile config
+This is a very very minimal X11 Qtile config
 
 i have the scripts located at ~/documents
 
